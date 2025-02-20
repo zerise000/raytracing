@@ -59,3 +59,33 @@ std::tuple<double,double> Sphere::hit_sphere(Ray dir,Point origin,double t_min,d
 	return {t1,t2};
 }
 
+void compute_light(Sphere* selected_sphere,Point intersect,Ray normal_vec,std::vector<Light> lights){
+	double intensity = 0;
+	double tmp_prod;
+
+	for(auto& light: lights){
+		switch(light.type){
+			case AMBIENT:
+				intensity += light.intensity;
+				break;
+
+			case POINT:
+				Ray tmp;
+				tmp.x = std::get<0>(light.src) - std::get<0>(intersect);
+				tmp.y = std::get<1>(light.src) - std::get<1>(intersect);
+				tmp.z = std::get<2>(light.src) - std::get<2>(intersect);
+				
+				tmp_prod = light.intensity*dot_prod(normal_vec,tmp)/(tmp.length()*normal_vec.length());
+				intensity += (tmp_prod > 0 ? tmp_prod : 0); 
+				break;
+			case DIFFUSE:
+				tmp_prod = light.intensity*dot_prod(normal_vec,light.direction)/(light.direction.length()*normal_vec.length());
+				intensity += (tmp_prod > 0 ? tmp_prod : 0); 
+				break;
+		}
+	}
+
+ 	std::get<0>(selected_sphere->surf_color) *= intensity; 
+ 	std::get<1>(selected_sphere->surf_color) *= intensity; 
+ 	std::get<2>(selected_sphere->surf_color) *= intensity; 
+}
