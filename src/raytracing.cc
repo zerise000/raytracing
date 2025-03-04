@@ -16,29 +16,11 @@ Color render_color(Ray ray,std::vector<Sphere> spheres,std::vector<Light> lights
 		t2 = std::get<1>(t);
 
 		if(t1 < t_min && t1 != -1){
-          /*	Ray N = {
-				(std::get<0>(origin)+t1*ray.x)-std::get<0>(sphere.center),
-				(std::get<1>(origin)+t1*ray.y)-std::get<1>(sphere.center),
-				(std::get<2>(origin)+t1*ray.z)-std::get<2>(sphere.center)
-			};
-
-			N.normalize();
-			c_min = {0.5*(N.x+1),0.5*(N.y+1),0.5*(N.z+1)};
-			t_min = t1;*/
       t_min = t1;
 			s_min = sphere;
 		}
 		
 		if(t2 < t_min && t2 != -1){
-          /*	Ray N = {
-				(std::get<0>(origin)+t2*ray.x)-std::get<0>(sphere.center),
-				(std::get<1>(origin)+t2*ray.y)-std::get<1>(sphere.center),
-				(std::get<2>(origin)+t2*ray.z)-std::get<2>(sphere.center)
-			};
-
-			N.normalize();
-			c_min = {0.5*(N.x+1),0.5*(N.y+1),0.5*(N.z+1)};
-			t_min = t2;*/
       t_min = t2;
 			s_min = sphere;
 		}
@@ -52,14 +34,7 @@ Color render_color(Ray ray,std::vector<Sphere> spheres,std::vector<Light> lights
 			std::get<2>(origin) + t_min*ray.z,
 		};
 
-		Ray normal_vec;
-		normal_vec.x = std::get<0>(intersect)-std::get<0>(s_min.center);
-		normal_vec.y = std::get<1>(intersect)-std::get<1>(s_min.center);
-		normal_vec.z = std::get<2>(intersect)-std::get<2>(s_min.center);
-
-		normal_vec.normalize();
-
-		compute_light(&s_min,intersect,normal_vec,lights);
+		compute_light(&s_min,ray,intersect,s_min.get_normal_vec(intersect),lights);
 		return s_min.surf_color;
 	}
 
@@ -78,9 +53,9 @@ Color render_color(Ray ray,std::vector<Sphere> spheres,std::vector<Light> lights
 void drawAt(SDL_Renderer* renderer,Color color,int x,int y,int width,int height){
 	SDL_SetRenderDrawColor(
 		renderer,
-		int(std::get<0>(color)*255.999),
-		int(std::get<1>(color)*255.999),	
-		int(std::get<2>(color)*255.999),
+		(std::get<0>(color)*255.999),
+		(std::get<1>(color)*255.999),	
+		(std::get<2>(color)*255.999),
 		255
 	);
 
@@ -100,14 +75,15 @@ void sendRays(SDL_Renderer* renderer,int width,int height){
 
 	std::vector<Light> lights;
 	lights.push_back({AMBIENT,0.2,{0,0,0},{0,0,0}});
-	lights.push_back({POINT,0.3,{2,1,0},{0,0,0}});
-	lights.push_back({DIFFUSE,0.5,{0,0,0},{1,4,4}});
+	lights.push_back({POINT,0.3,{0,2,0},{0,0,0}});
+	lights.push_back({DIRECTIONAL,0.5,{0,0,0},{2,3,4}});
 
 	std::vector<Sphere> spheres;
 	Sphere s1;
 	s1.center = {0,0,3};
 	s1.radius = 1;
 	s1.surf_color = {1,0,0};
+	s1.s_coeff = 10;
 	
 	/*Sphere s2;
 	s2.center = {2,0,4};

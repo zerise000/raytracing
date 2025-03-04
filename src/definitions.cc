@@ -59,30 +59,68 @@ std::tuple<double,double> Sphere::hit_sphere(Ray dir,Point origin,double t_min,d
 	return {t1,t2};
 }
 
-void compute_light(Sphere* selected_sphere,Point intersect,Ray normal_vec,std::vector<Light> lights){
-	double intensity = 0;
-	double tmp_prod;
+Ray Sphere::get_normal_vec(Point surf_point){
+	Ray tmp = {
+		std::get<0>(surf_point)-std::get<0>(this->center),
+		std::get<1>(surf_point)-std::get<1>(this->center),
+		std::get<2>(surf_point)-std::get<2>(this->center)
+	};
 
-	for(auto& light: lights){
-		switch(light.type){
+	tmp.normalize();
+	return tmp;
+}
+
+Light::Light(LightType type,double intensity,Point src,Ray direction) : type{type},intensity{intensity},src{src},direction{direction} {}
+
+double Light::get_intensity(Point intersect,double s_coeff,Ray render_ray,Ray normal_vec) {
+
+	double tmp_prod,dot_nl;
+	double final_intensity;
+	double dot_light;
+	Ray r;
+	Ray tmp;
+
+	switch(this->type){
 			case AMBIENT:
-				intensity += light.intensity;
+				return this->intensity;
+			case POINT:
+				tmp.x = std::get<0>(this->src) - std::get<0>(intersect);
+				tmp.y = std::get<1>(this->src) - std::get<1>(intersect);
+				tmp.z = std::get<2>(this->src) - std::get<2>(intersect);
+
 				break;
 
-			case POINT:
-				Ray tmp;
-				tmp.x = std::get<0>(light.src) - std::get<0>(intersect);
-				tmp.y = std::get<1>(light.src) - std::get<1>(intersect);
-				tmp.z = std::get<2>(light.src) - std::get<2>(intersect);
-				
-				tmp_prod = light.intensity*dot_prod(normal_vec,tmp)/(tmp.length()*normal_vec.length());
-				intensity += (tmp_prod > 0 ? tmp_prod : 0); 
-				break;
-			case DIFFUSE:
-				tmp_prod = light.intensity*dot_prod(normal_vec,light.direction)/(light.direction.length()*normal_vec.length());
-				intensity += (tmp_prod > 0 ? tmp_prod : 0); 
+			case DIRECTIONAL:
+				tmp.x = this->direction.x;
+				tmp.y = this->direction.y;
+				tmp.z = this->direction.z;
 				break;
 		}
+		
+		dot_nl = dot_prod(normal_vec,tmp);
+
+		r.x=2*dot_nl*normal_vec.x-tmp.x;
+		r.y=2*dot_nl*normal_vec.y-tmp.y;
+		r.z=2*dot_nl*normal_vec.z-tmp.z;
+
+		tmp_prod = dot_nl/(tmp.length()*normal_vec.length());
+		final_intensity = (tmp_prod > 0 ? tmp_prod : 0);
+
+		dot_light = dot_prod(render_ray,r);
+
+		if(dot_light > 0 && s_coeff != -1)
+			final_intensity += std::pow(dot_light/(r.length()*render_ray.length()),s_coeff);
+
+		final_intensity*=this->intensity;
+	
+		return final_intensity;
+}
+
+void compute_light(Sphere* selected_sphere,Ray render_ray,Point intersect,Ray normal_vec,std::vector<Light> lights){
+	double intensity = 0;
+
+	for(auto& light: lights){
+		intensity += light.get_intensity(intersect,selected_sphere->s_coeff,render_ray,normal_vec);
 	}
 
  	std::get<0>(selected_sphere->surf_color) *= intensity; 
