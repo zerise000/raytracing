@@ -1,6 +1,6 @@
-![image displayed in the program](./window.png)
-
 # Simple Raytracing algorithm
+
+![image displayed in the program](./window.png)
 
 This is a simple raytracing implementation made just to understand how 
 graphics rendering works. It still yet to be finished, however the 
