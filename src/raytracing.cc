@@ -1,5 +1,9 @@
 #include "raytracing.h"
 
+double random_double(){
+	return std::rand()/2*RAND_MAX;
+}
+
 Color render_color(Ray ray,std::vector<Sphere> spheres,std::vector<Light> lights,Point origin){
 
 	double inf = std::numeric_limits<double>::max();
@@ -51,11 +55,31 @@ Color render_color(Ray ray,std::vector<Sphere> spheres,std::vector<Light> lights
 
 
 void drawAt(SDL_Renderer* renderer,Color color,int x,int y,int width,int height){
+	double r = std::get<0>(color);
+	double g = std::get<1>(color);
+	double b = std::get<2>(color);
+
+	if(r > 1.0)
+		r = 1.0;
+	if(r < 0.0)
+		r = 0;
+
+
+	if(g > 1.0)
+		g = 1.0;
+	if(g < 0.0)
+		g = 0;
+
+	if(b > 1.0)
+		b = 1.0;
+	if(b < 0.0)
+		b = 0;
+
 	SDL_SetRenderDrawColor(
 		renderer,
-		(std::get<0>(color)*255.999),
-		(std::get<1>(color)*255.999),	
-		(std::get<2>(color)*255.999),
+		(r*255.999),
+		(g*255.999),	
+		(b*255.999),
 		255
 	);
 
@@ -67,11 +91,44 @@ void drawAt(SDL_Renderer* renderer,Color color,int x,int y,int width,int height)
 	SDL_RenderDrawPoint(renderer,screen_x,screen_y);
 }
 
-void sendRays(SDL_Renderer* renderer,int width,int height){
+Color raysPerPixel(std::vector<Sphere> spheres,std::vector<Light> lights,int width,int height,int canvas_x,int canvas_y,int samples_per_row){
+	double step = 1.0/samples_per_row;
 	double v_height = 1.0;
 	double v_width = v_height*(double(width)/height); // width/height = v_width / v_height 
 	double foc_len = 1.0;
+
+	Color acc = {0.0,0.0,0.0};
+	Color iter;
 	Ray ray;
+
+	Point camera = {0.0,0.0,0.0};
+
+	for(int i=0; i<samples_per_row; i++){
+		for(int j=0; j<samples_per_row; j++){
+			ray.x =  ((canvas_x+j*step)*v_width/width) - std::get<0>(camera);
+			ray.y =  ((canvas_y+i*step)*v_height/height) - std::get<1>(camera);
+			ray.z = std::get<2>(camera)-foc_len;
+
+			iter = render_color(ray,spheres,lights,camera);	
+			std::get<0>(acc) += std::get<0>(iter);
+			std::get<1>(acc) += std::get<1>(iter);
+			std::get<2>(acc) += std::get<2>(iter);
+		}
+	}
+
+	int total_samples = samples_per_row*samples_per_row;
+  std::get<0>(acc) /= total_samples;
+	std::get<1>(acc) /= total_samples;
+	std::get<2>(acc) /= total_samples;
+
+
+	//std::cout << std::endl << std::get<0>(acc) << " " <<std::get<1>(acc) << " " << std::get<2>(acc);
+	return acc;
+}
+
+void sendRays(SDL_Renderer* renderer,int width,int height){
+	
+	int samples_per_row = 3;
 
 	std::vector<Light> lights;
 	lights.push_back({AMBIENT,0.2,{0,0,0},{0,0,0}});
@@ -84,6 +141,7 @@ void sendRays(SDL_Renderer* renderer,int width,int height){
 	s1.radius = 1;
 	s1.surf_color = {1,0,0};
 	s1.s_coeff = 10;
+	srand(time(NULL));
 	
 	/*Sphere s2;
 	s2.center = {2,0,4};
@@ -100,19 +158,13 @@ void sendRays(SDL_Renderer* renderer,int width,int height){
 	/*spheres.push_back(s2);
 	spheres.push_back(s3);*/
 
-	Point camera = {0.0,0.0,0.0};
 
 	Color color;
 
 	for(int canvas_x=-width/2; canvas_x<width/2; canvas_x++){
 		for(int canvas_y=-height/2; canvas_y<height/2; canvas_y++){
+			color = raysPerPixel(spheres,lights,width,height,canvas_x,canvas_y,samples_per_row);
 
-			ray.x =  (canvas_x*v_width/width) - std::get<0>(camera);
-			ray.y =  (canvas_y*v_height/height) - std::get<1>(camera);
-			ray.z = std::get<2>(camera)-foc_len;
-
-			color = render_color(ray,spheres,lights,camera);	
-			
 			drawAt(renderer,color,canvas_x,canvas_y,width,height);
 		}
 	}

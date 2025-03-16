@@ -50,8 +50,5 @@ typedef struct{
 
 void compute_light(Sphere* selected_sphere,Ray render_ray,Point intersect,Ray normal_vec,std::vector<Light> lights);
 double dot_prod(Ray v1,Ray v2,double t_min,double t_max);
-double random_double();
-double random_range();
-Ray random(double min,double max);
 
 #endif

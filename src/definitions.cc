@@ -15,22 +15,6 @@ void Ray::normalize(){
 	this->z /= len;
 }
 
-double random_double(){
-	return std::rand()/(RAND_MAX+1.0);
-}
-
-double random_range(double min,double max){
-	return min + (max-min)*random_double(); 
-}
-
-Ray random(double min,double max){
-	return Ray{
-		random_range(min,max),
-		random_range(min,max),
-		random_range(min,max)
-	};
-}
-
 double dot_prod(Ray v1,Ray v2){
 	return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
 }
