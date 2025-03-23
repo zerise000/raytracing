@@ -8,6 +8,9 @@
 #include <cstdlib>
 #include <ctime>
 
+#define CHECK_INTERVAL(color) color>1.0 ? 1.0 : (color<0.0 ? 0.0 : color)
+	
+
 double random_double();
 Color render_color(Ray ray,std::vector<Sphere> spheres,std::vector<Light> lights,Point origin);
 void drawAt(SDL_Renderer* renderer,Color color,int x,int y,int width,int height);

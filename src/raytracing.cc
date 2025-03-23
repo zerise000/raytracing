@@ -55,25 +55,11 @@ Color render_color(Ray ray,std::vector<Sphere> spheres,std::vector<Light> lights
 
 
 void drawAt(SDL_Renderer* renderer,Color color,int x,int y,int width,int height){
-	double r = std::get<0>(color);
-	double g = std::get<1>(color);
-	double b = std::get<2>(color);
-
-	if(r > 1.0)
-		r = 1.0;
-	if(r < 0.0)
-		r = 0;
+	double r = CHECK_INTERVAL(std::get<0>(color));
+	double g = CHECK_INTERVAL(std::get<1>(color));
+	double b = CHECK_INTERVAL(std::get<2>(color));
 
 
-	if(g > 1.0)
-		g = 1.0;
-	if(g < 0.0)
-		g = 0;
-
-	if(b > 1.0)
-		b = 1.0;
-	if(b < 0.0)
-		b = 0;
 
 	SDL_SetRenderDrawColor(
 		renderer,
