@@ -33,5 +33,5 @@ All C++ source files are stored in `src` folder. The two main files are:
 
 ## how to compile
 
-You need to install [https://wiki.libsdl.org/SDL2/Installation](SDL2) as a dependency, then exec
+[You need to install SDL2](https://wiki.libsdl.org/SDL2/Installation) as a dependency, then exec
 the command 'make' in order to get the final executable
